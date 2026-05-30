@@ -1,0 +1,422 @@
+[
+  {
+    "time_sec": 0.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 1,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 1.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 2.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 3.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 4.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 5.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 6.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 7.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 8.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 9.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 10.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 11.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 12.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 13.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 14.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 15.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 16.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 17.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 18.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 19.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  },
+  {
+    "time_sec": 20.0,
+    "status_before": {
+      "healthy": true,
+      "has_imu": true,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 21,
+      "gtsam_available": true
+    },
+    "status_after": {
+      "healthy": false,
+      "has_imu": false,
+      "has_depth": true,
+      "has_dvl": true,
+      "imu_buffer_size": 0,
+      "gtsam_available": true
+    },
+    "produced_estimate": true
+  }
+]

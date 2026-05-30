@@ -1,0 +1,6 @@
+{
+  "baseline_rmse": 0.5146340841548529,
+  "optimized_rmse": 0.09617912463529137,
+  "baseline_final_error": 0.11255175341407973,
+  "optimized_final_error": 0.1218355898443599
+}

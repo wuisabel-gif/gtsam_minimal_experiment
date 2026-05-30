@@ -1,0 +1,9 @@
+{
+  "num_keyframes": 21,
+  "num_estimates": 21,
+  "gtsam_available": true,
+  "baseline_rmse": 3.051995166250871,
+  "estimated_rmse": 3.168270431209878,
+  "baseline_final_error": 2.925173623825997,
+  "estimated_final_error": 2.913402779854986
+}
