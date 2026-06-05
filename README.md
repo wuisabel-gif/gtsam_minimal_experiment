@@ -188,6 +188,7 @@ Example output:
 ![Pose3 3D trajectory](results_pose3_rosbag/pose3_3.png)
 ![Pose3 XY trajectory](results_pose3_rosbag/pose3_x_y.png)
 ![Pose3 XZ trajectory](results_pose3_rosbag/pose3_x-z.png)
+![Pose3 projected 3D smoke test](results_pose3_rosbag/projection_smoke_test.png)
 
 ## Why these tests matter
 
@@ -209,6 +210,13 @@ specific vehicle stack. The same offline validation pattern can be reused for
 other ROS2 robotics systems that record pose, IMU, odometry, depth, or similar
 sensor topics and want to test factor-graph estimation without depending on a
 perfect live run.
+
+## References
+
+- Frank Dellaert, "Factor Graphs and GTSAM: A Hands-on Introduction,"
+  GTSAM tutorial. This repository's Pose2/Pose3 graph structure and optimization
+  workflow follow the same factor-graph framing described in the official
+  tutorial: <https://gtsam.org/tutorials/intro.html#magicparlabel-65411>
 
 ## Run
 

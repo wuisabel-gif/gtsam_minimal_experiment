@@ -4,8 +4,10 @@ import json
 import math
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,8 +18,19 @@ PACKAGE_ROOT = REPO_ROOT / "src" / "barracuda_estimation"
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
-from barracuda_estimation.gtsam_estimator import GtsamEstimator
-from barracuda_estimation.measurement_types import DepthSample, DvlSample, ImuSample
+if TYPE_CHECKING:
+    from barracuda_estimation.gtsam_estimator import GtsamEstimator
+    from barracuda_estimation.measurement_types import DepthSample, DvlSample, ImuSample
+
+
+def load_estimator_types() -> tuple[type["GtsamEstimator"], type["DepthSample"], type["DvlSample"], type["ImuSample"]]:
+    from barracuda_estimation.gtsam_estimator import GtsamEstimator
+    from barracuda_estimation.measurement_types import DepthSample, DvlSample, ImuSample
+
+    return GtsamEstimator, DepthSample, DvlSample, ImuSample
+
+
+GtsamEstimator, DepthSample, DvlSample, ImuSample = load_estimator_types()
 
 
 DATASET_PATH = REPO_ROOT / "experiments" / "gtsam_minimal" / "data" / "synthetic_underwater_loop.npz"

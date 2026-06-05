@@ -11,15 +11,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 from gtsam.symbol_shorthand import X
 
 from run_pose2_from_rosbag import (
-    IMPORT_ERROR,
     add_system_python_paths,
     downsample_messages,
     read_pose_messages,
-    stamp_to_sec,
 )
 
 add_system_python_paths()
@@ -34,6 +31,115 @@ def pose_xyz(poses: list[gtsam.Pose3]) -> np.ndarray:
 
 def rmse(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.sum((a - b) ** 2, axis=1))))
+
+
+def cube_limits(points: np.ndarray, pad_fraction: float = 0.08) -> tuple[np.ndarray, np.ndarray]:
+    mins = np.min(points, axis=0)
+    maxs = np.max(points, axis=0)
+    center = 0.5 * (mins + maxs)
+    extent = np.max(maxs - mins)
+    extent = max(extent, 1e-3)
+    half = 0.5 * extent * (1.0 + pad_fraction)
+    return center - half, center + half
+
+
+def style_projection_axes(ax, mins: np.ndarray, maxs: np.ndarray) -> None:
+    ax.set_xlim(mins[0], maxs[0])
+    ax.set_ylim(mins[1], maxs[1])
+    ax.set_zlim(mins[2], maxs[2])
+    ax.set_box_aspect(maxs - mins)
+    ax.view_init(elev=18, azim=-28)
+    ax.grid(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+
+    fig = ax.figure
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+    for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
+        axis.pane.set_facecolor((1.0, 1.0, 1.0, 0.08))
+        axis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.95))
+        axis.line.set_color((1.0, 1.0, 1.0, 0.95))
+        axis.line.set_linewidth(1.1)
+
+    ax.set_xlabel("x", color="white", labelpad=-12)
+    ax.set_ylabel("y", color="white", labelpad=-10)
+    ax.set_zlabel("z", color="white", labelpad=-8)
+    ax.tick_params(colors="white")
+
+
+def plot_plane_projection(
+    ax,
+    xyz: np.ndarray,
+    *,
+    plane: str,
+    plane_value: float,
+    color: str,
+    alpha: float,
+    linewidth: float,
+) -> None:
+    projected = xyz.copy()
+    if plane == "xy":
+        projected[:, 2] = plane_value
+    elif plane == "xz":
+        projected[:, 1] = plane_value
+    elif plane == "yz":
+        projected[:, 0] = plane_value
+    else:
+        raise ValueError(f"Unsupported projection plane: {plane}")
+
+    ax.plot(projected[:, 0], projected[:, 1], projected[:, 2], color=color, alpha=alpha, linewidth=linewidth)
+
+
+def save_projected_trajectory_plot(
+    output_path: Path,
+    raw_xyz: np.ndarray,
+    optimized_xyz: np.ndarray,
+    reference_xyz: np.ndarray,
+) -> None:
+    all_xyz = np.vstack([reference_xyz, raw_xyz, optimized_xyz])
+    mins, maxs = cube_limits(all_xyz)
+
+    fig = plt.figure(figsize=(7.4, 7.4), facecolor="black")
+    ax = fig.add_subplot(111, projection="3d")
+    style_projection_axes(ax, mins, maxs)
+
+    ax.plot(raw_xyz[:, 0], raw_xyz[:, 1], raw_xyz[:, 2], color="#ff3b30", linewidth=1.6, label="perturbed initial")
+    ax.plot(
+        optimized_xyz[:, 0],
+        optimized_xyz[:, 1],
+        optimized_xyz[:, 2],
+        color="#39ff5a",
+        linewidth=1.4,
+        label="optimized",
+    )
+
+    for plane in ("xy", "xz", "yz"):
+        plot_plane_projection(
+            ax,
+            raw_xyz,
+            plane=plane,
+            plane_value=maxs[{"xy": 2, "xz": 1, "yz": 0}[plane]],
+            color="#ff5a5a",
+            alpha=0.55,
+            linewidth=1.0,
+        )
+        plot_plane_projection(
+            ax,
+            optimized_xyz,
+            plane=plane,
+            plane_value=mins[{"xy": 2, "xz": 1, "yz": 0}[plane]],
+            color="#62ff62",
+            alpha=0.55,
+            linewidth=1.0,
+        )
+
+    ax.set_title("Pose3 Rosbag Trajectory with Bounding-Plane Projections", color="white", pad=18)
+    ax.legend(loc="upper right", frameon=False, labelcolor="white")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=170, facecolor=fig.get_facecolor())
+    plt.close(fig)
 
 
 def save_factor_graph_diagram(output_path: Path, num_poses: int) -> None:
@@ -236,6 +342,13 @@ def main() -> None:
     fig.tight_layout()
     fig.savefig(args.output_dir / "trajectory_xyz.png", dpi=150)
     plt.close(fig)
+
+    save_projected_trajectory_plot(
+        args.output_dir / "trajectory_projected_3d.png",
+        raw_xyz=raw_xyz,
+        optimized_xyz=optimized_xyz,
+        reference_xyz=reference_xyz,
+    )
 
     print(json.dumps(metrics, indent=2))
     print(f"Wrote results to {args.output_dir}")
