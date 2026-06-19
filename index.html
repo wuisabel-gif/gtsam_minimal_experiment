@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>gtsam_minimal_experiment — Barracuda AUV offline factor-graph validation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --abyss:#08131F;
+    --abyss-2:#0A1826;
+    --panel:#0E2032;
+    --panel-2:#112739;
+    --line:#1E3A4F;
+    --hairline:#1A3142;
+    --ink:#CFE2EC;
+    --ink-bright:#EAF6FB;
+    --muted:#6E8DA0;
+    --muted-2:#4A697C;
+    --cyan:#46E0DE;
+    --cyan-dim:#2BA9AE;
+    --cyan-deep:#0E5B63;
+    --depth:#E6A24C;
+    --grid:rgba(70,224,222,.045);
+    --glow:rgba(70,224,222,.55);
+    --maxw:1180px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(70,224,222,.10), transparent 60%),
+      radial-gradient(900px 600px at 8% 110%, rgba(70,224,222,.05), transparent 55%),
+      linear-gradient(180deg, var(--abyss) 0%, #06101A 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    font-size:16.5px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:rgba(70,224,222,.28);color:var(--ink-bright);}
+
+  a{color:var(--cyan);text-decoration:none;}
+  a:hover{color:var(--ink-bright);}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+  .mono{font-family:"IBM Plex Mono", ui-monospace, monospace;}
+
+  /* ---------- subtle blueprint grid overlay ---------- */
+  .gridbg{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  }
+
+  /* ---------- top nav ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(180deg, rgba(8,19,31,.92), rgba(8,19,31,.55));
+    border-bottom:1px solid var(--hairline);
+  }
+  .nav-inner{
+    max-width:var(--maxw);margin:0 auto;padding:13px 28px;
+    display:flex;align-items:center;gap:22px;
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-family:"IBM Plex Mono";font-weight:600;color:var(--ink-bright);letter-spacing:.02em;font-size:14.5px;white-space:nowrap;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--glow);animation:pulse 2.6s ease-in-out infinite;}
+  .nav-links{display:flex;gap:24px;margin-left:auto;font-family:"IBM Plex Mono";font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;}
+  .nav-links a{color:var(--muted);transition:color .2s;}
+  .nav-links a:hover{color:var(--cyan);}
+  @media(max-width:820px){.nav-links{display:none;}}
+
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(.78);}}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;z-index:1;padding:74px 0 54px;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:34px;}}
+
+  .eyebrow{
+    font-family:"IBM Plex Mono";font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--cyan-dim);display:flex;align-items:center;gap:12px;margin-bottom:22px;
+  }
+  .eyebrow::before{content:"";width:30px;height:1px;background:var(--cyan-dim);display:inline-block;}
+
+  h1.title{
+    font-family:"Space Grotesk", sans-serif;font-weight:600;
+    font-size:clamp(2.3rem,5.4vw,3.7rem);line-height:1.04;letter-spacing:-.02em;
+    color:var(--ink-bright);margin:0 0 22px;
+  }
+  h1.title em{font-style:normal;color:var(--cyan);}
+  .lede{font-size:1.12rem;color:var(--ink);max-width:38ch;margin:0 0 28px;}
+  .lede b{color:var(--ink-bright);font-weight:600;}
+
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .btn{
+    font-family:"IBM Plex Mono";font-size:13px;letter-spacing:.03em;
+    padding:12px 20px;border-radius:3px;border:1px solid var(--cyan-deep);
+    display:inline-flex;align-items:center;gap:9px;transition:all .22s;
+  }
+  .btn.primary{background:var(--cyan);color:#04161A;border-color:var(--cyan);font-weight:600;box-shadow:0 0 0 rgba(70,224,222,0);}
+  .btn.primary:hover{box-shadow:0 0 22px rgba(70,224,222,.4);transform:translateY(-1px);}
+  .btn.ghost{color:var(--cyan);}
+  .btn.ghost:hover{background:rgba(70,224,222,.08);border-color:var(--cyan);color:var(--ink-bright);}
+
+  .hero-stats{display:flex;gap:30px;margin-top:34px;flex-wrap:wrap;}
+  .stat .n{font-family:"Space Grotesk";font-size:1.8rem;font-weight:600;color:var(--cyan);line-height:1;}
+  .stat .l{font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:7px;}
+
+  /* ---------- hero factor graph (signature) ---------- */
+  .graph-frame{
+    position:relative;border:1px solid var(--hairline);border-radius:6px;
+    background:linear-gradient(160deg, rgba(17,39,57,.6), rgba(8,19,31,.4));
+    padding:18px;overflow:hidden;
+  }
+  .graph-frame::before{
+    content:"FACTOR GRAPH · LIVE STRUCTURE";
+    position:absolute;top:11px;left:16px;font-family:"IBM Plex Mono";font-size:10px;
+    letter-spacing:.18em;color:var(--muted);z-index:3;
+  }
+  .corner{position:absolute;width:12px;height:12px;border:1px solid var(--cyan-dim);opacity:.6;z-index:3;}
+  .corner.tl{top:7px;left:7px;border-right:0;border-bottom:0;}
+  .corner.tr{top:7px;right:7px;border-left:0;border-bottom:0;}
+  .corner.bl{bottom:7px;left:7px;border-right:0;border-top:0;}
+  .corner.br{bottom:7px;right:7px;border-left:0;border-top:0;}
+  svg.fg{display:block;width:100%;height:auto;}
+
+  .fg .edge{stroke:var(--cyan-deep);stroke-width:1.4;fill:none;stroke-dasharray:280;stroke-dashoffset:280;animation:draw 1.4s ease forwards;}
+  .fg .edge.d2{animation-delay:.18s;}
+  .fg .edge.d3{animation-delay:.34s;}
+  .fg .edge.d4{animation-delay:.5s;}
+  @keyframes draw{to{stroke-dashoffset:0;}}
+
+  .fg .pose{fill:#0E2032;stroke:var(--cyan);stroke-width:1.6;}
+  .fg .factor{fill:var(--abyss);stroke:var(--cyan-dim);stroke-width:1.3;}
+  .fg .factor.depth{stroke:var(--depth);}
+  .fg .node-grp{opacity:0;animation:fadein .5s ease forwards;}
+  @keyframes fadein{to{opacity:1;}}
+  .fg .lbl{font-family:"IBM Plex Mono";font-size:11px;fill:var(--ink-bright);}
+  .fg .flbl{font-family:"IBM Plex Mono";font-size:8.5px;fill:var(--muted);}
+  .fg .ping{fill:var(--cyan);}
+
+  /* ---------- section scaffolding ---------- */
+  section{position:relative;z-index:1;padding:62px 0;border-top:1px solid var(--hairline);}
+  .sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:38px;flex-wrap:wrap;}
+  .sec-num{font-family:"IBM Plex Mono";font-size:12px;color:var(--cyan-dim);letter-spacing:.1em;}
+  h2{font-family:"Space Grotesk";font-weight:600;font-size:clamp(1.55rem,3vw,2.1rem);letter-spacing:-.015em;color:var(--ink-bright);margin:0;}
+  .sec-sub{color:var(--muted);max-width:60ch;margin:14px 0 0;font-size:1.02rem;}
+
+  /* ---------- "why offline" console strip ---------- */
+  .console{
+    border:1px solid var(--hairline);border-radius:6px;background:rgba(8,19,31,.55);
+    font-family:"IBM Plex Mono";font-size:13.5px;overflow:hidden;
+  }
+  .console-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--hairline);color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;}
+  .console-bar .led{width:8px;height:8px;border-radius:50%;background:var(--depth);box-shadow:0 0 8px rgba(230,162,76,.6);}
+  .console-body{padding:8px 0;}
+  .cline{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:9px 18px;align-items:start;}
+  .cline + .cline{border-top:1px solid rgba(26,49,66,.5);}
+  .cline .tag{color:var(--depth);}
+  .cline .msg{color:var(--ink);}
+
+  /* ---------- test catalog ---------- */
+  .tests{display:flex;flex-direction:column;gap:22px;}
+  .test{
+    border:1px solid var(--hairline);border-radius:7px;
+    background:linear-gradient(150deg, rgba(14,32,50,.55), rgba(8,19,31,.35));
+    padding:26px 28px;transition:border-color .25s, transform .25s, box-shadow .25s;
+  }
+  .test:hover{border-color:var(--cyan-deep);transform:translateY(-2px);box-shadow:0 14px 40px -20px rgba(0,0,0,.8);}
+  .test-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .test-id{
+    font-family:"Space Grotesk";font-weight:600;font-size:1.05rem;color:var(--cyan);
+    border:1px solid var(--cyan-deep);border-radius:4px;width:38px;height:38px;
+    display:grid;place-items:center;flex:none;
+  }
+  .test h3{font-family:"Space Grotesk";font-weight:600;font-size:1.22rem;color:var(--ink-bright);margin:0;letter-spacing:-.01em;}
+  .files{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;}
+  .chip{font-family:"IBM Plex Mono";font-size:12px;color:var(--cyan);background:rgba(70,224,222,.07);border:1px solid var(--cyan-deep);border-radius:3px;padding:4px 10px;}
+  .chip.alt{color:var(--depth);border-color:rgba(230,162,76,.35);background:rgba(230,162,76,.06);}
+  .test p{margin:14px 0 0;color:var(--ink);}
+  .checks{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 24px;}
+  .checks li{position:relative;padding-left:22px;font-size:.96rem;color:var(--ink);}
+  .checks li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 7px var(--glow);}
+  .checks li.mono{font-family:"IBM Plex Mono";font-size:.86rem;color:var(--muted);}
+  .checks li.mono::before{background:var(--cyan-dim);box-shadow:none;}
+
+  /* ---------- figures (preserve original image paths) ---------- */
+  .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:22px;}
+  figure.fig{margin:0;border:1px solid var(--hairline);border-radius:6px;overflow:hidden;background:#06101A;position:relative;}
+  figure.fig .imgwrap{position:relative;aspect-ratio:4/3;display:grid;place-items:center;background:
+      repeating-linear-gradient(0deg, rgba(70,224,222,.03) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(90deg, rgba(70,224,222,.03) 0 1px, transparent 1px 24px),
+      #07121C;}
+  figure.fig img{display:block;width:100%;height:100%;object-fit:contain;}
+  figure.fig .fallback{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    font-family:"IBM Plex Mono";color:var(--muted-2);text-align:center;padding:18px;
+  }
+  figure.fig .fallback svg{opacity:.5;}
+  figure.fig .fallback .sig{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan-dim);}
+  figcaption{font-family:"IBM Plex Mono";font-size:11.5px;color:var(--muted);padding:10px 12px;border-top:1px solid var(--hairline);display:flex;justify-content:space-between;gap:10px;align-items:center;}
+  figcaption .path{color:var(--cyan-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  /* ---------- run / code blocks ---------- */
+  .codeblock{border:1px solid var(--hairline);border-radius:7px;overflow:hidden;margin-bottom:22px;background:rgba(6,16,26,.7);}
+  .code-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--hairline);font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .code-bar .dots{display:flex;gap:6px;}
+  .code-bar .dots i{width:9px;height:9px;border-radius:50%;display:inline-block;background:#23445a;}
+  .code-bar .dots i:first-child{background:var(--cyan-deep);}
+  pre{margin:0;padding:18px 20px;overflow-x:auto;font-family:"IBM Plex Mono";font-size:13.2px;line-height:1.85;color:var(--ink);}
+  pre .cmd{color:var(--ink-bright);}
+  pre .py{color:var(--cyan);}
+  pre .flag{color:var(--depth);}
+  pre .cmt{color:var(--muted-2);}
+  pre .path{color:#7FB3C4;}
+
+  /* ---------- outputs grid ---------- */
+  .outs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+  .out{border:1px solid var(--hairline);border-radius:5px;padding:14px 16px;display:flex;align-items:center;gap:12px;background:rgba(14,32,50,.4);transition:border-color .2s,background .2s;}
+  .out:hover{border-color:var(--cyan-deep);background:rgba(14,32,50,.7);}
+  .out .ic{color:var(--cyan-dim);flex:none;}
+  .out .dir{font-family:"IBM Plex Mono";font-size:13px;color:var(--ink-bright);}
+  .out .meta{font-family:"IBM Plex Mono";font-size:10.5px;color:var(--muted);margin-top:2px;letter-spacing:.04em;}
+
+  /* ---------- workflow timeline ---------- */
+  .flow{position:relative;margin-top:12px;padding-left:6px;}
+  .flow ol{list-style:none;margin:0;padding:0;counter-reset:step;}
+  .flow li{position:relative;padding:0 0 30px 56px;counter-increment:step;}
+  .flow li:last-child{padding-bottom:0;}
+  .flow li::before{
+    content:counter(step,decimal-leading-zero);
+    position:absolute;left:0;top:-2px;width:38px;height:38px;border-radius:6px;
+    border:1px solid var(--cyan-deep);background:var(--abyss);
+    font-family:"IBM Plex Mono";font-size:13px;color:var(--cyan);
+    display:grid;place-items:center;z-index:2;
+  }
+  .flow li::after{content:"";position:absolute;left:19px;top:38px;bottom:0;width:1px;background:linear-gradient(var(--cyan-deep),transparent);}
+  .flow li:last-child::after{display:none;}
+  .flow .ft{font-family:"Space Grotesk";font-weight:500;font-size:1.08rem;color:var(--ink-bright);}
+  .flow .fd{color:var(--muted);font-size:.95rem;margin-top:3px;}
+
+  /* ---------- references / footer ---------- */
+  .refcard{border:1px solid var(--hairline);border-left:3px solid var(--cyan);border-radius:6px;padding:22px 26px;background:rgba(14,32,50,.4);}
+  .refcard .who{font-family:"Space Grotesk";font-weight:600;color:var(--ink-bright);font-size:1.05rem;}
+  .refcard .what{color:var(--ink);margin:6px 0 10px;font-style:italic;}
+  .refcard .desc{color:var(--muted);font-size:.95rem;}
+
+  footer{position:relative;z-index:1;border-top:1px solid var(--hairline);padding:38px 0 60px;}
+  .foot-inner{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center;}
+  .foot-inner .mono{color:var(--muted);font-size:12.5px;}
+  .foot-tag{font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan-dim);}
+
+  /* ---------- scroll reveal ---------- */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1;transform:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important;}
+    .reveal{opacity:1;transform:none;}
+    html{scroll-behavior:auto;}
+  }
+
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="gridbg" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="dot"></span>gtsam_minimal_experiment</div>
+    <nav class="nav-links">
+      <a href="#why">Why offline</a>
+      <a href="#tests">Tests</a>
+      <a href="#run">Run</a>
+      <a href="#outputs">Outputs</a>
+      <a href="#workflow">Workflow</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">USC AUV · Barracuda estimation</div>
+        <h1 class="title">Offline GTSAM validation for an <em>autonomous underwater vehicle</em>.</h1>
+        <p class="lede">A safe place to test factor-graph ideas <b>before</b> they reach the live ROS2 estimator. Small, repeatable, offline graphs that validate structure, measurements, and outputs — without depending on a perfect hardware session.</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="https://github.com/wuisabel-gif/gtsam_minimal_experiment" target="_blank" rel="noopener">View the test suite →</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><div class="n">8</div><div class="l">offline tests</div></div>
+          <div class="stat"><div class="n">3</div><div class="l">sensor streams</div></div>
+          <div class="stat"><div class="n">2D / 3D</div><div class="l">Pose2 · Pose3</div></div>
+        </div>
+      </div>
+
+      <!-- signature: factor graph readout -->
+      <div class="graph-frame">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <svg class="fg" viewBox="0 0 460 360" role="img" aria-label="A factor graph linking pose, velocity and bias states to IMU, depth and DVL factors.">
+          <!-- edges -->
+          <path class="edge" d="M90,150 L210,150"/>
+          <path class="edge d2" d="M210,150 L330,150"/>
+          <path class="edge d2" d="M90,150 L150,80"/>
+          <path class="edge d3" d="M210,150 L270,80"/>
+          <path class="edge d3" d="M90,150 L150,230"/>
+          <path class="edge d4" d="M210,150 L270,230"/>
+          <path class="edge d4" d="M330,150 L330,250"/>
+          <path class="edge d2" d="M90,260 L210,260"/>
+          <path class="edge d4" d="M210,260 L210,150"/>
+
+          <!-- factor nodes -->
+          <g class="node-grp" style="animation-delay:.7s">
+            <rect class="factor" x="135" y="65" width="30" height="30" rx="3"/>
+            <text class="flbl" x="150" y="83" text-anchor="middle">IMU</text>
+          </g>
+          <g class="node-grp" style="animation-delay:.85s">
+            <rect class="factor" x="255" y="65" width="30" height="30" rx="3"/>
+            <text class="flbl" x="270" y="83" text-anchor="middle">IMU</text>
+          </g>
+          <g class="node-grp" style="animation-delay:1s">
+            <rect class="factor depth" x="135" y="215" width="30" height="30" rx="3"/>
+            <text class="flbl" x="150" y="233" text-anchor="middle">DPT</text>
+          </g>
+          <g class="node-grp" style="animation-delay:1.05s">
+            <rect class="factor" x="255" y="215" width="30" height="30" rx="3"/>
+            <text class="flbl" x="270" y="233" text-anchor="middle">DVL</text>
+          </g>
+          <g class="node-grp" style="animation-delay:1.15s">
+            <rect class="factor" x="315" y="248" width="30" height="30" rx="3"/>
+            <text class="flbl" x="330" y="266" text-anchor="middle">BIAS</text>
+          </g>
+
+          <!-- pose / state nodes -->
+          <g class="node-grp" style="animation-delay:.55s">
+            <circle class="pose" cx="90" cy="150" r="22"/>
+            <text class="lbl" x="90" y="154" text-anchor="middle">X₀</text>
+          </g>
+          <g class="node-grp" style="animation-delay:.65s">
+            <circle class="pose" cx="210" cy="150" r="22"/>
+            <text class="lbl" x="210" y="154" text-anchor="middle">X₁</text>
+          </g>
+          <g class="node-grp" style="animation-delay:.75s">
+            <circle class="pose" cx="330" cy="150" r="22"/>
+            <text class="lbl" x="330" y="154" text-anchor="middle">X₂</text>
+          </g>
+          <g class="node-grp" style="animation-delay:.85s">
+            <circle class="pose" cx="90" cy="260" r="20"/>
+            <text class="lbl" x="90" y="264" text-anchor="middle">V₀</text>
+          </g>
+          <g class="node-grp" style="animation-delay:.95s">
+            <circle class="pose" cx="210" cy="260" r="20"/>
+            <text class="lbl" x="210" y="264" text-anchor="middle">V₁</text>
+          </g>
+
+          <!-- travelling ping -->
+          <circle class="ping" r="3">
+            <animateMotion dur="3.2s" repeatCount="indefinite" path="M90,150 L210,150 L330,150" begin="1.6s"/>
+            <animate attributeName="opacity" values="0;1;1;0" dur="3.2s" repeatCount="indefinite" begin="1.6s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WHY OFFLINE ============ -->
+<section id="why">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 00</span>
+      <div>
+        <h2>Why offline, why repeatable</h2>
+        <p class="sec-sub">Live sensor reading is not always successful during hardware sessions. These conditions make it hard to tell whether a graph problem is the math or the deployment — so the suite removes that ambiguity entirely.</p>
+      </div>
+    </div>
+    <div class="console reveal">
+      <div class="console-bar"><span class="led"></span>hardware session · status feed</div>
+      <div class="console-body">
+        <div class="cline"><span class="tag mono">CAMERA</span><span class="msg">cameras can reboot or disconnect mid-run</span></div>
+        <div class="cline"><span class="tag mono">DVL / DEPTH</span><span class="msg">DVL or depth sensors may be unavailable</span></div>
+        <div class="cline"><span class="tag mono">TOPICS</span><span class="msg">IMU, DVL, depth, and camera topics may not all be live at the same time</span></div>
+        <div class="cline"><span class="tag mono">RUNTIME</span><span class="msg">container / runtime issues can hide whether a bug is math or environment</span></div>
+      </div>
+    </div>
+    <p class="sec-sub reveal" style="margin-top:24px;max-width:70ch;">The graphs here are built from standard GTSAM library primitives — <span class="mono" style="color:var(--cyan)">PreintegratedImuMeasurements</span>, <span class="mono" style="color:var(--cyan)">ImuFactor</span>, <span class="mono" style="color:var(--cyan)">PriorFactorPose3</span>, <span class="mono" style="color:var(--cyan)">LevenbergMarquardtOptimizer</span> and friends — then adapted to the Barracuda AUV measurement layout. The structure isn't invented; it's a vehicle-specific experiment on top of the standard factor and IMU preintegration machinery.</p>
+  </div>
+</section>
+
+<!-- ============ TESTS ============ -->
+<section id="tests">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 01</span>
+      <div>
+        <h2>What this repository tests</h2>
+        <p class="sec-sub">Eight offline tests, ordered from the most underwater-specific prototype down to small reference graphs and real-data fallbacks.</p>
+      </div>
+    </div>
+
+    <div class="tests">
+
+      <!-- TEST 1 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">1</span>
+          <h3>Synthetic underwater multi-sensor graph</h3>
+        </div>
+        <div class="files">
+          <span class="chip">generate_synthetic_dataset.py</span>
+          <span class="chip">run_gtsam_localization.py</span>
+        </div>
+        <p>The main underwater-oriented offline prototype. Built on GTSAM's inertial and factor-graph workflow, then adapted to the Barracuda measurement layout.</p>
+        <ul class="checks">
+          <li>IMU motion propagation / preintegration</li>
+          <li>depth constraints</li>
+          <li>DVL velocity constraints</li>
+          <li>pose / velocity / bias state layout</li>
+          <li>batch GTSAM optimization</li>
+        </ul>
+        <div class="figs">
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_underwater/trajectory_xy.png" alt="Underwater trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 17l5-5 4 3 5-6 4 4"/><circle cx="8" cy="8" r="1.5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Underwater trajectory <span class="path">results_underwater/trajectory_xy.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_underwater/factor_graph.png" alt="Underwater factor graph" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><path d="M7 12h10M6 11l5-5M18 11l-5-5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Underwater factor graph <span class="path">results_underwater/factor_graph.png</span></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- TEST 2 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">2</span>
+          <h3>Simple Pose2 batch sanity test</h3>
+        </div>
+        <div class="files"><span class="chip">pose2_slam_sanity.py</span></div>
+        <p>A small reference graph for checking the basics of batch optimization behavior.</p>
+        <ul class="checks">
+          <li>prior factor setup</li>
+          <li class="mono">BetweenFactorPose2</li>
+          <li>loop closure</li>
+          <li>batch optimization behavior</li>
+        </ul>
+        <div class="figs">
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose2_batch/trajectory_xy.png" alt="Pose2 batch trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 17l5-5 4 3 5-6 4 4"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose2 batch trajectory <span class="path">results_pose2_batch/trajectory_xy.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose2_batch/factor_graph.png" alt="Pose2 batch factor graph" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><path d="M7 12h10M6 11l5-5M18 11l-5-5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose2 batch factor graph <span class="path">results_pose2_batch/factor_graph.png</span></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- TEST 3 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">3</span>
+          <h3>Simple Pose2 incremental iSAM2 test</h3>
+        </div>
+        <div class="files"><span class="chip">pose2_isam2_incremental.py</span></div>
+        <p>The incremental version of the simple pose graph — useful for checking the online update flow.</p>
+        <ul class="checks">
+          <li>online / incremental graph update flow</li>
+          <li class="mono">basic iSAM2 usage</li>
+          <li>incremental vs raw odometry</li>
+        </ul>
+        <div class="figs">
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose2_isam2/trajectory_xy.png" alt="Pose2 iSAM2 trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 17l5-5 4 3 5-6 4 4"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose2 iSAM2 trajectory <span class="path">results_pose2_isam2/trajectory_xy.png</span></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- TEST 4 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">4</span>
+          <h3>Backend-only replay test for the ROS2 estimator</h3>
+        </div>
+        <div class="files"><span class="chip">replay_estimator_backend.py</span></div>
+        <p>Replays the synthetic underwater dataset directly through <span class="mono" style="color:var(--cyan)">barracuda_estimation.gtsam_estimator.GtsamEstimator</span> without ROS2 — the closest offline test of the actual backend logic.</p>
+        <ul class="checks">
+          <li>IMU buffering</li>
+          <li>depth ingestion</li>
+          <li>DVL ingestion</li>
+          <li>backend update flow</li>
+          <li>step-by-step estimator status</li>
+        </ul>
+        <div class="figs">
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_backend_harness/trajectory_xy.png" alt="Backend harness trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 17l5-5 4 3 5-6 4 4"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Backend harness trajectory <span class="path">results_backend_harness/trajectory_xy.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_backend_harness/depth_vs_time.png" alt="Backend harness depth" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 6v12M3 18h18M7 14l4-3 3 2 4-5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Backend harness depth <span class="path">results_backend_harness/depth_vs_time.png</span></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- TEST 5 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">5</span>
+          <h3>Rosbag-to-dataset conversion</h3>
+        </div>
+        <div class="files"><span class="chip">rosbag_to_gtsam_dataset.py</span></div>
+        <p>Converts a ROS2 bag into the <span class="mono" style="color:var(--cyan)">.npz</span> format expected by the offline underwater runner.</p>
+        <ul class="checks">
+          <li class="mono">/barracuda/imu/data</li>
+          <li class="mono">/barracuda/depth</li>
+          <li class="mono">/barracuda/dvl/odometry</li>
+          <li class="mono">sensor_msgs/msg/Range</li>
+          <li class="mono">sensor_msgs/msg/FluidPressure</li>
+        </ul>
+      </article>
+
+      <!-- TEST 6 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">6</span>
+          <h3>Rosbag recording helper</h3>
+        </div>
+        <div class="files"><span class="chip alt">record_barracuda_rosbag.sh</span></div>
+        <p>A small helper script for recording Barracuda estimation topics into a ROS2 bag.</p>
+      </article>
+
+      <!-- TEST 7 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">7</span>
+          <h3>Real-data fallback Pose2 graph</h3>
+        </div>
+        <div class="files"><span class="chip">run_pose2_from_rosbag.py</span></div>
+        <p>When the full sensor stack is unavailable but a live pose topic like <span class="mono" style="color:var(--cyan)">/barracuda/zed_node/pose</span> exists, this builds a simple offline Pose2 graph from the recorded stream.</p>
+        <ul class="checks">
+          <li>real-data fallback testing</li>
+          <li>checking the pipeline works at all</li>
+          <li>pose-graph behavior without DVL / depth</li>
+        </ul>
+      </article>
+
+      <!-- TEST 8 -->
+      <article class="test reveal">
+        <div class="test-head">
+          <span class="test-id">8</span>
+          <h3>Real-data offline Pose3 graph</h3>
+        </div>
+        <div class="files"><span class="chip">run_pose3_from_rosbag.py</span></div>
+        <p>The 3D version of the rosbag pose test — keeps <span class="mono" style="color:var(--cyan)">x</span>, <span class="mono" style="color:var(--cyan)">y</span>, <span class="mono" style="color:var(--cyan)">z</span> and full 3D orientation, so vertical motion and orientation aren't flattened into a yaw-only result.</p>
+        <ul class="checks">
+          <li>vertical motion is preserved</li>
+          <li>orientation stays full 3D</li>
+          <li>live pose tested in full 3D offline</li>
+        </ul>
+        <div class="figs">
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose3_rosbag/pose3_3.png" alt="Pose3 3D trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v18M3 8l9 5 9-5M3 16l9 5 9-5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose3 3D trajectory <span class="path">results_pose3_rosbag/pose3_3.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose3_rosbag/pose3_x_y.png" alt="Pose3 XY trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 17l5-5 4 3 5-6 4 4"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose3 XY trajectory <span class="path">results_pose3_rosbag/pose3_x_y.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose3_rosbag/pose3_x-z.png" alt="Pose3 XZ trajectory" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4v16M3 20h18M6 14l4-6 4 3 4-7"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose3 XZ trajectory <span class="path">results_pose3_rosbag/pose3_x-z.png</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <div class="imgwrap">
+              <img src="results_pose3_rosbag/projection_smoke_test.png" alt="Pose3 projected 3D smoke test" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="fallback" style="display:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v18M3 8l9 5 9-5M3 16l9 5 9-5"/></svg><span class="sig">awaiting render</span></div>
+            </div>
+            <figcaption>Pose3 projected smoke test <span class="path">results_pose3_rosbag/projection_smoke_test.png</span></figcaption>
+          </figure>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY IT MATTERS ============ -->
+<section id="matters">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 02</span>
+      <div>
+        <h2>Why these tests matter</h2>
+        <p class="sec-sub">Intentionally smaller and cleaner than the final vehicle stack, so each one answers a single sharp question.</p>
+      </div>
+    </div>
+    <div class="console reveal">
+      <div class="console-bar"><span class="led" style="background:var(--cyan);box-shadow:0 0 8px var(--glow)"></span>questions this suite can answer</div>
+      <div class="console-body">
+        <div class="cline"><span class="tag mono">Q · STRUCTURE</span><span class="msg">is the graph structure correct?</span></div>
+        <div class="cline"><span class="tag mono">Q · FACTORS</span><span class="msg">are we using the right factors?</span></div>
+        <div class="cline"><span class="tag mono">Q · DEPTH</span><span class="msg">does z survive a Pose3 pipeline?</span></div>
+        <div class="cline"><span class="tag mono">Q · SOURCE</span><span class="msg">is a bug GTSAM logic or live ROS deployment?</span></div>
+        <div class="cline"><span class="tag mono">Q · PROGRESS</span><span class="msg">can we still validate when hardware is partially unavailable?</span></div>
+      </div>
+    </div>
+    <p class="sec-sub reveal" style="margin-top:24px;max-width:72ch;">Because the workflow is rosbag-based, the pattern reaches past this one vehicle: any ROS2 system that records pose, IMU, odometry, or depth can reuse the same offline validation approach to test factor-graph estimation without depending on a perfect live run.</p>
+  </div>
+</section>
+
+<!-- ============ RUN ============ -->
+<section id="run">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 03</span>
+      <div>
+        <h2>Run</h2>
+        <p class="sec-sub">Each script is standalone. Start small, then move up to the synthetic underwater graph and real rosbag conversions.</p>
+      </div>
+    </div>
+
+    <div class="codeblock reveal">
+      <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span>core suite</div>
+<pre><span class="cmt"># run the offline tests, smallest first</span>
+<span class="py">python3</span> <span class="cmd">generate_synthetic_dataset.py</span>
+<span class="py">python3</span> <span class="cmd">run_gtsam_localization.py</span>
+<span class="py">python3</span> <span class="cmd">pose2_slam_sanity.py</span>
+<span class="py">python3</span> <span class="cmd">pose2_isam2_incremental.py</span>
+<span class="py">python3</span> <span class="cmd">replay_estimator_backend.py</span>
+<span class="py">python3</span> <span class="cmd">run_pose2_from_rosbag.py</span> <span class="path">/root/bags/my_bag</span>
+<span class="py">python3</span> <span class="cmd">run_pose3_from_rosbag.py</span> <span class="path">/root/bags/my_bag</span></pre>
+    </div>
+
+    <div class="codeblock reveal">
+      <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span>convert a real Jetson rosbag → underwater dataset</div>
+<pre><span class="py">python3</span> <span class="cmd">rosbag_to_gtsam_dataset.py</span> <span class="path">/root/bags/my_bag</span> \
+  <span class="flag">--output</span> <span class="path">data/jetson_rosbag_underwater.npz</span>
+<span class="py">python3</span> <span class="cmd">run_gtsam_localization.py</span> \
+  <span class="flag">--dataset</span> <span class="path">data/jetson_rosbag_underwater.npz</span> \
+  <span class="flag">--output-dir</span> <span class="path">results_jetson_rosbag</span></pre>
+    </div>
+
+    <div class="codeblock reveal">
+      <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span>fallback · pose topic only (no DVL / depth)</div>
+<pre><span class="cmt"># Pose2 fallback graph from a live pose stream</span>
+<span class="py">python3</span> <span class="cmd">run_pose2_from_rosbag.py</span> <span class="path">/root/bags/my_bag</span> \
+  <span class="flag">--pose-topic</span> <span class="path">/barracuda/zed_node/pose</span> \
+  <span class="flag">--output-dir</span> <span class="path">results_pose2_rosbag</span>
+
+<span class="cmt"># verify z directly with the Pose3 version</span>
+<span class="py">python3</span> <span class="cmd">run_pose3_from_rosbag.py</span> <span class="path">/root/bags/my_bag</span> \
+  <span class="flag">--pose-topic</span> <span class="path">/barracuda/zed_node/pose</span> \
+  <span class="flag">--output-dir</span> <span class="path">results_pose3_rosbag</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OUTPUTS ============ -->
+<section id="outputs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 04</span>
+      <div>
+        <h2>Outputs</h2>
+        <p class="sec-sub">Scripts write trajectory plots, depth plots, factor-graph diagrams, and metrics under dedicated result directories.</p>
+      </div>
+    </div>
+    <div class="outs reveal">
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_underwater/</div><div class="meta">trajectory · depth · factor_graph.png</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_jetson_rosbag/</div><div class="meta">converted real-bag run</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_pose2_rosbag/</div><div class="meta">fallback pose2</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_pose3_rosbag/</div><div class="meta">xy · xz · xyz · metrics.json</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_backend_harness/</div><div class="meta">estimator backend replay</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_pose2_batch/</div><div class="meta">factor_graph.png</div></div></div>
+      <div class="out"><span class="ic">▣</span><div><div class="dir">results_pose2_isam2/</div><div class="meta">incremental trajectory</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WORKFLOW ============ -->
+<section id="workflow">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 05</span>
+      <div>
+        <h2>Intended workflow</h2>
+        <p class="sec-sub">A real sequence — validate the cheapest, most controlled graphs first, and only promote logic once it's stable.</p>
+      </div>
+    </div>
+    <div class="flow reveal">
+      <ol>
+        <li><div class="ft">Validate small graphs first</div><div class="fd">Pose2 batch & iSAM2 reference graphs.</div></li>
+        <li><div class="ft">Validate synthetic underwater multi-sensor graphs</div><div class="fd">IMU + depth + DVL on a controlled synthetic dataset.</div></li>
+        <li><div class="ft">Validate rosbag-based fallback graphs from real topics</div><div class="fd">Pose2 / Pose3 from a live pose stream.</div></li>
+        <li><div class="ft">Replay cleaned-up logic into the ROS2 estimator backend</div><div class="fd">Offline replay through GtsamEstimator.</div></li>
+        <li><div class="ft">Move stable graph logic into the live estimator package</div><div class="fd">Only once everything above holds — into barracuda_estimation.</div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REFERENCES ============ -->
+<section id="references">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">§ 06</span>
+      <div><h2>References</h2></div>
+    </div>
+    <div class="refcard reveal">
+      <div class="who">Frank Dellaert</div>
+      <div class="what">“Factor Graphs and GTSAM: A Hands-on Introduction”</div>
+      <div class="desc">This repository's Pose2 / Pose3 graph structure and optimization workflow follow the same factor-graph framing described in the official tutorial. → <a href="https://gtsam.org/tutorials/intro.html#magicparlabel-65411" target="_blank" rel="noopener">gtsam.org/tutorials/intro</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <div>
+        <div class="foot-tag"><a href="https://github.com/wuisabel-gif" target="_blank" rel="noopener">wuisabel-gif</a></div>
+        <div class="mono" style="margin-top:6px;">gtsam_minimal_experiment · offline factor-graph validation for Barracuda</div>
+      </div>
+      <div class="mono">GTSAM · ROS2 · iSAM2 · Pose2 / Pose3</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // scroll reveal
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
